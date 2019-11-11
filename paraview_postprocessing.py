@@ -5,6 +5,9 @@ sys.path.append('/usr/lib/paraview/site-packages')
 from paraview.simple import *
 import paraview.vtk as vtk
 
+import os
+import csv
+
 # Measure certain value along the line
 def measure_over_line(pline, scalar, threshold, length):
     nbp = pline.GetDataInformation().GetNumberOfPoints()
@@ -25,7 +28,7 @@ def measure_over_line(pline, scalar, threshold, length):
     
     return magnitude
 
-def analyze_neck(inputFile, scalar, threshold):
+def open_exodus(inputFile):
 
     reader = ExodusIIReader(FileName=inputFile)
 
@@ -34,8 +37,9 @@ def analyze_neck(inputFile, scalar, threshold):
                     if callable(getattr(reader, method_name))]
     #print(object_methods)
 
-    tsteps = reader.TimestepValues
-    nst = len(tsteps)
+    return reader
+
+def domain_dimensions(reader, scalar, threshold):
 
     bounds = reader.GetDataInformation().GetBounds()
     xMin = bounds[0]
@@ -62,7 +66,27 @@ def analyze_neck(inputFile, scalar, threshold):
     psz = measure_over_line(lineDia, scalar, threshold, domainLength)
     particleDiameter = round(psz/2, 0)
 
+    szMin = measure_over_line(lineDia, scalar, 0.998, domainLength)
+    szMax = measure_over_line(lineDia, scalar, 0.001, domainLength)
+    gbWidth = (szMax - szMin) / 4.
+
     print("Particle diameter = {}".format(particleDiameter))
+    print("GB width = {}".format(gbWidth))
+
+    return particleDiameter, gbWidth
+
+def neck_from_vtk(reader, particleDiameter, scalar, threshold):
+
+    tsteps = reader.TimestepValues
+
+    bounds = reader.GetDataInformation().GetBounds()
+    xMin = bounds[0]
+    xMax = bounds[1]
+    yMin = bounds[2]
+    yMax = bounds[3]
+
+    domainWidth = yMax-yMin
+    domainLength = xMax-xMin
 
     # Line for neck size
     lineStartX = (xMax + xMin) / 2
@@ -86,3 +110,36 @@ def analyze_neck(inputFile, scalar, threshold):
         arNeck.append(neckGrowth)
 
     return tsteps, arNeck
+
+def neck_from_pf(fname, diameter, width):
+
+    timeList = []
+    neckGrowthList = []
+
+    with open(fname, 'r') as theFile:
+        reader = csv.DictReader(theFile)
+        
+        for line in reader:        
+            time = float(line['time'])
+            neckArea = float(line['neck'])
+            neckDiameter = neckArea / width
+            neckGrowth = neckDiameter / diameter
+            
+            timeList.append(time)
+            neckGrowthList.append(neckGrowth)
+            
+    return timeList, neckGrowthList
+
+def detect_file(inputFolder, ext):
+    fNames = [fn for fn in os.listdir(inputFolder) if fn.endswith(ext)]
+    fCount = len(fNames)
+
+    if (fCount == 0):
+        print("ERROR: unable to detect '" + ext + "' file for this case, check input folder")
+        return None
+
+    fileName = fNames[0]
+    if (fCount > 1):
+        print("NOTICE: several '" + ext + "' files found, the first is used: " + fileName)
+
+    return os.path.join(inputFolder, fileName)
