@@ -39,7 +39,7 @@ def open_exodus(inputFile):
 
     return reader
 
-def domain_dimensions(reader, scalar, threshold):
+def domain_dimensions(reader, scalar, threshold, resolution):
 
     bounds = reader.GetDataInformation().GetBounds()
     xMin = bounds[0]
@@ -61,6 +61,7 @@ def domain_dimensions(reader, scalar, threshold):
     lineDia = PlotOverLine(reader)
     lineDia.Source.Point1 = [lineStartX, lineStartY, 0.0]
     lineDia.Source.Point2 = [lineEndX, lineEndY, 0.0]
+    lineDia.Source.Resolution = resolution
     lineDia.UpdatePipeline()
 
     psz = measure_over_line(lineDia, scalar, threshold, domainLength)
@@ -75,7 +76,7 @@ def domain_dimensions(reader, scalar, threshold):
 
     return particleDiameter, gbWidth
 
-def neck_from_vtk(reader, particleDiameter, scalar, threshold):
+def neck_from_vtk(reader, particleDiameter, scalar, threshold, resolution):
 
     tsteps = reader.TimestepValues
 
@@ -97,6 +98,7 @@ def neck_from_vtk(reader, particleDiameter, scalar, threshold):
     line = PlotOverLine(reader)
     line.Source.Point1 = [lineStartX, lineStartY, 0.0]
     line.Source.Point2 = [lineEndX, lineEndY, 0.0]
+    line.Source.Resolution = resolution
     line.UpdatePipeline()
 
     arNeck = []

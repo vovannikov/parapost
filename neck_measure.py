@@ -1,60 +1,136 @@
 import os
-import matplotlib.pyplot as plt
+import threading
 from paraview_postprocessing import *
 
-# settings
-isNeckFromPF = True
-cValueThreshold = 0.52
-timeScale = 1e3
-resultsPath = "/mnt/x/results"
+def neck_measure_single(path, timeScale, cValueThreshold, lineResolution, isNeckFromPF):
 
-# input files
-arCases = [
-    #"T=1223_time=1e3_length=1e-6_width=8_dia=145_mobfac=energy",
-    #"T=1223_time=1e3_length=1e-6_width=8_dia=145_mobfac=energy_reduced_mobs",
-    "T=1223_time=1e3_length=1e-6_width=15_dia=145_mobfac=energy",
-    "T=1223_time=1e3_length=1e-6_width=8_dia=145_mobfac=energy",
-    "T=1223_time=1e3_length=1e-6_width=8_dia=145_mobfac=ideal_reduced_mobs",
-    "T=1223_time=1e3_length=1e-6_width=8_dia=145_mobfac=ideal_no_gbsurf"
-]
+    arCurves = []
 
-for fcase in arCases:
+    for fcase in arCases:
 
-    print("")
-    print("Working on case " + fcase + " ...")
+        print("")
+        print("Working on case " + fcase + " ...")
 
-    # source data
-    inputFolder = os.path.join(resultsPath, fcase)
+        # source data
+        inputFolder = os.path.join(resultsPath, fcase)
 
-    if not(os.path.isdir(inputFolder)):
-        print("ERROR: the data folder for this case does not exist")
-        continue
+        if not(os.path.isdir(inputFolder)):
+            print("ERROR: the data folder for this case does not exist")
+            continue
 
-    exodusFileName = detect_file(inputFolder, ".e")
+        exodusFileName = detect_file(inputFolder, ".e")
 
-    if exodusFileName:
+        if exodusFileName:
 
-        reader = open_exodus(exodusFileName)
-        particleDiameter, gbWidth = domain_dimensions(reader, 'c', cValueThreshold)
+            reader = open_exodus(exodusFileName)
+            particleDiameter, gbWidth = domain_dimensions(reader, 'c', cValueThreshold, lineResolution)
 
-        if not(isNeckFromPF):
-            arTime, arNeck = neck_from_vtk(reader, particleDiameter, 'c', cValueThreshold)
-        else:
-            csvFileName = detect_file(inputFolder, ".csv")
+            if not(isNeckFromPF):
+                arTime, arNeck = neck_from_vtk(reader, particleDiameter, 'c', cValueThreshold, lineResolution)
+            else:
+                csvFileName = detect_file(inputFolder, ".csv")
 
-            if csvFileName:
-                arTime, arNeck = neck_from_pf(csvFileName, particleDiameter, gbWidth)
+                if csvFileName:
+                    arTime, arNeck = neck_from_pf(csvFileName, particleDiameter, gbWidth)
 
-        arTime = [t*timeScale for t in arTime]
+            arTime = [t*timeScale for t in arTime]
 
-        plt.plot(arTime, arNeck, marker='', linestyle='-', label=fcase)
+            curve = { 't': arTime, 'neck': arNeck, 'label': fcase }
+            arCurves.append(curve)
+
+    return arCurves
+
+def neck_measure_serial(resultsPath, arCases, timeScale, cValueThreshold, lineResolution, isNeckFromPF):
+
+    arCurves = []
+
+    for fcase in arCases:
+
+        print("")
+        print("Working on case " + fcase + " ...")
+
+        # source data
+        inputFolder = os.path.join(resultsPath, fcase)
+
+        if not(os.path.isdir(inputFolder)):
+            print("ERROR: the data folder for this case does not exist")
+            continue
+
+        exodusFileName = detect_file(inputFolder, ".e")
+
+        if exodusFileName:
+
+            reader = open_exodus(exodusFileName)
+            particleDiameter, gbWidth = domain_dimensions(reader, 'c', cValueThreshold, lineResolution)
+
+            if not(isNeckFromPF):
+                arTime, arNeck = neck_from_vtk(reader, particleDiameter, 'c', cValueThreshold, lineResolution)
+            else:
+                csvFileName = detect_file(inputFolder, ".csv")
+
+                if csvFileName:
+                    arTime, arNeck = neck_from_pf(csvFileName, particleDiameter, gbWidth)
+
+            arTime = [t*timeScale for t in arTime]
+
+            curve = { 't': arTime, 'neck': arNeck, 'label': fcase }
+            arCurves.append(curve)
+
+    return arCurves
+
+def neck_measure_parallel(resultsPath, arCases, timeScale, cValueThreshold, lineResolution, isNeckFromPF):
+
+    arCurves = []
+
+    class PlotStack:
+        def __init__(self):
+            self._lock = threading.Lock()
+
+        def addCurve(self, x, y, title):
+            with self._lock:
+                curve = { 't': x, 'neck': y, 'label': title }
+                arCurves.append(curve)
+
+    plotStack = PlotStack()
+
+    def thread_parse(fcase):
+        print("")
+        print("Working on case " + fcase + " ...")
+
+        # source data
+        inputFolder = os.path.join(resultsPath, fcase)
+
+        if not(os.path.isdir(inputFolder)):
+            print("ERROR: the data folder for this case does not exist")
+            return        
 
 
-plt.xlabel('time')
-plt.ylabel('x / r')
-plt.legend(loc='lower right')
-plt.grid(True)
-plt.show()
+        exodusFileName = detect_file(inputFolder, ".e")
 
+        if exodusFileName:
 
+            reader = open_exodus(exodusFileName)
+            particleDiameter, gbWidth = domain_dimensions(reader, 'c', cValueThreshold, lineResolution)
 
+            if not(isNeckFromPF):
+                arTime, arNeck = neck_from_vtk(reader, particleDiameter, 'c', cValueThreshold, lineResolution)
+            else:
+                csvFileName = detect_file(inputFolder, ".csv")
+
+                if csvFileName:
+                    arTime, arNeck = neck_from_pf(csvFileName, particleDiameter, gbWidth)
+
+            arTime = [t*timeScale for t in arTime]
+
+            plotStack.addCurve(arTime, arNeck, fcase)
+
+    threads = list()
+    for fcase in arCases:
+        x = threading.Thread(target=thread_parse, args=(fcase,))
+        threads.append(x)
+        x.start()
+
+    for thread in threads:
+        thread.join()
+
+    return arCurves
