@@ -88,7 +88,6 @@ def neck_from_vtk(reader, particleDiameter, scalar, threshold, resolution):
     yMax = bounds[3]
 
     domainWidth = yMax-yMin
-    domainLength = xMax-xMin
 
     # Line for neck size
     lineStartX = (xMax + xMin) / 2
@@ -113,6 +112,48 @@ def neck_from_vtk(reader, particleDiameter, scalar, threshold, resolution):
         arNeck.append(neckGrowth)
 
     return tsteps, arNeck
+
+def shrinkage_from_vtk(reader, particleDiameter, scalar, threshold, resolution):
+
+    tsteps = reader.TimestepValues
+
+    bounds = reader.GetDataInformation().GetBounds()
+    xMin = bounds[0]
+    xMax = bounds[1]
+    yMin = bounds[2]
+    yMax = bounds[3]
+
+    domainLength = xMax-xMin
+
+    # Line for shrinkage
+    lineStartX = xMin
+    lineStartY = (yMax + yMin) / 2
+    lineEndX = xMax
+    lineEndY = (yMax + yMin) / 2
+
+    lineDia = PlotOverLine(reader)
+    lineDia.Source.Point1 = [lineStartX, lineStartY, 0.0]
+    lineDia.Source.Point2 = [lineEndX, lineEndY, 0.0]
+    lineDia.Source.Resolution = resolution
+    lineDia.UpdatePipeline()
+
+    L0 = 2*particleDiameter
+    arShrinkage = []
+    for timestep in tsteps:
+        print("Measuring shrinkage for time = {}".format(timestep))
+
+        lineDia.UpdatePipeline(timestep)
+
+        L = measure_over_line(lineDia, scalar, threshold, domainLength)
+        dL = L0 - L
+        if dL > 0:
+            shrinkage = dL / L0
+        else:
+            shrinkage = arShrinkage[-1] if len(arShrinkage) > 0 else 0
+
+        arShrinkage.append(shrinkage)
+
+    return tsteps, arShrinkage
 
 def neck_from_pf(fname, diameter, width):
 

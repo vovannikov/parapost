@@ -33,7 +33,7 @@ if args.load:
         data = np.genfromtxt(fullPath, dtype=float, delimiter=',', names=True)
 
         label = os.path.splitext(fileName)[0]
-        curve = { 't': data["t"], 'neck': data["neck"], 'label': label }
+        curve = { 't': data["t"], 'neck': data["neck"], 'shrinkage': data["shrinkage"], 'label': label }
         arCurves.append(curve)
 
 else:
@@ -70,13 +70,24 @@ else:
 if args.plot:
     import matplotlib.pyplot as plt
 
-    for curve in arCurves:
-        plt.plot(curve['t'], curve['neck'], marker='', linestyle='-', label=curve['label'])
+    fig, axes = plt.subplots(nrows=1, ncols=2)
+    fig.suptitle('Neck growth and shrinkage')
 
-    plt.xlabel('time')
-    plt.ylabel('x / r')
-    plt.legend(loc='lower right')
-    plt.grid(True)
+    for curve in arCurves:
+        axes[0].plot(curve['t'], curve['neck'], marker='', linestyle='-', label=curve['label'])
+        axes[1].plot(curve['t'], curve['shrinkage'], marker='', linestyle='-', label=curve['label'])
+
+    axes[0].set_xlabel('time')
+    axes[0].set_ylabel('x / r')
+    axes[0].grid(True)
+
+    axes[1].set_xlabel('time')
+    axes[1].set_ylabel('dL / L0')
+    axes[1].grid(True)
+
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, -0.02))
+
     plt.show()
 
 if args.save:
@@ -90,6 +101,6 @@ if args.save:
     for curve in arCurves:
         fileName = curve['label'] + '.csv'
         fullPath = os.path.join(args.save, fileName)
-        np.savetxt(fullPath, np.column_stack((curve['t'], curve['neck'])), delimiter=',', comments='', header="t,neck")
+        np.savetxt(fullPath, np.column_stack((curve['t'], curve['neck'], curve['shrinkage'])), delimiter=',', comments='', header="t,neck,shrinkage")
 
     print("The CSV files have been saved")

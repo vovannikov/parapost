@@ -2,43 +2,44 @@ import os
 import threading
 from paraview_postprocessing import *
 
-def neck_measure_single(path, timeScale, cValueThreshold, lineResolution, isNeckFromPF):
+def parse_case(resultsPath, fcase, timeScale, cValueThreshold, lineResolution, isNeckFromPF):
 
-    arCurves = []
+    print("")
+    print("Working on case " + fcase + " ...")
 
-    for fcase in arCases:
+    # source data
+    inputFolder = os.path.join(resultsPath, fcase)
 
-        print("")
-        print("Working on case " + fcase + " ...")
+    if not(os.path.isdir(inputFolder)):
+        print("ERROR: the data folder for this case does not exist")
+        return None
 
-        # source data
-        inputFolder = os.path.join(resultsPath, fcase)
+    exodusFileName = detect_file(inputFolder, ".e")
 
-        if not(os.path.isdir(inputFolder)):
-            print("ERROR: the data folder for this case does not exist")
-            continue
+    if exodusFileName:
 
-        exodusFileName = detect_file(inputFolder, ".e")
+        reader = open_exodus(exodusFileName)
+        particleDiameter, gbWidth = domain_dimensions(reader, 'c', cValueThreshold, lineResolution)
 
-        if exodusFileName:
+        if not(isNeckFromPF):
+            arTime, arNeck = neck_from_vtk(reader, particleDiameter, 'c', cValueThreshold, lineResolution)
+            _, arShrinkage = shrinkage_from_vtk(reader, particleDiameter, 'c', cValueThreshold, lineResolution)
+        else:
+            csvFileName = detect_file(inputFolder, ".csv")
 
-            reader = open_exodus(exodusFileName)
-            particleDiameter, gbWidth = domain_dimensions(reader, 'c', cValueThreshold, lineResolution)
+            if csvFileName:
+                arTime, arNeck = neck_from_pf(csvFileName, particleDiameter, gbWidth)
+                arShrinkage = [0] * len(arNeck)
 
-            if not(isNeckFromPF):
-                arTime, arNeck = neck_from_vtk(reader, particleDiameter, 'c', cValueThreshold, lineResolution)
-            else:
-                csvFileName = detect_file(inputFolder, ".csv")
+        arTime = [t*timeScale for t in arTime]
 
-                if csvFileName:
-                    arTime, arNeck = neck_from_pf(csvFileName, particleDiameter, gbWidth)
+        curve = { 't': arTime, 'neck': arNeck, 'shrinkage': arShrinkage, 'label': fcase }
 
-            arTime = [t*timeScale for t in arTime]
+        return curve
+    
+    else:
 
-            curve = { 't': arTime, 'neck': arNeck, 'label': fcase }
-            arCurves.append(curve)
-
-    return arCurves
+        return None
 
 def neck_measure_serial(resultsPath, arCases, timeScale, cValueThreshold, lineResolution, isNeckFromPF):
 
@@ -46,34 +47,8 @@ def neck_measure_serial(resultsPath, arCases, timeScale, cValueThreshold, lineRe
 
     for fcase in arCases:
 
-        print("")
-        print("Working on case " + fcase + " ...")
-
-        # source data
-        inputFolder = os.path.join(resultsPath, fcase)
-
-        if not(os.path.isdir(inputFolder)):
-            print("ERROR: the data folder for this case does not exist")
-            continue
-
-        exodusFileName = detect_file(inputFolder, ".e")
-
-        if exodusFileName:
-
-            reader = open_exodus(exodusFileName)
-            particleDiameter, gbWidth = domain_dimensions(reader, 'c', cValueThreshold, lineResolution)
-
-            if not(isNeckFromPF):
-                arTime, arNeck = neck_from_vtk(reader, particleDiameter, 'c', cValueThreshold, lineResolution)
-            else:
-                csvFileName = detect_file(inputFolder, ".csv")
-
-                if csvFileName:
-                    arTime, arNeck = neck_from_pf(csvFileName, particleDiameter, gbWidth)
-
-            arTime = [t*timeScale for t in arTime]
-
-            curve = { 't': arTime, 'neck': arNeck, 'label': fcase }
+        curve = parse_case(resultsPath, fcase, timeScale, cValueThreshold, lineResolution, isNeckFromPF)
+        if curve:
             arCurves.append(curve)
 
     return arCurves
@@ -86,43 +61,17 @@ def neck_measure_parallel(resultsPath, arCases, timeScale, cValueThreshold, line
         def __init__(self):
             self._lock = threading.Lock()
 
-        def addCurve(self, x, y, title):
+        def addCurve(self, curve):
             with self._lock:
-                curve = { 't': x, 'neck': y, 'label': title }
                 arCurves.append(curve)
 
     plotStack = PlotStack()
 
     def thread_parse(fcase):
-        print("")
-        print("Working on case " + fcase + " ...")
+        curve = parse_case(resultsPath, fcase, timeScale, cValueThreshold, lineResolution, isNeckFromPF)
 
-        # source data
-        inputFolder = os.path.join(resultsPath, fcase)
-
-        if not(os.path.isdir(inputFolder)):
-            print("ERROR: the data folder for this case does not exist")
-            return        
-
-
-        exodusFileName = detect_file(inputFolder, ".e")
-
-        if exodusFileName:
-
-            reader = open_exodus(exodusFileName)
-            particleDiameter, gbWidth = domain_dimensions(reader, 'c', cValueThreshold, lineResolution)
-
-            if not(isNeckFromPF):
-                arTime, arNeck = neck_from_vtk(reader, particleDiameter, 'c', cValueThreshold, lineResolution)
-            else:
-                csvFileName = detect_file(inputFolder, ".csv")
-
-                if csvFileName:
-                    arTime, arNeck = neck_from_pf(csvFileName, particleDiameter, gbWidth)
-
-            arTime = [t*timeScale for t in arTime]
-
-            plotStack.addCurve(arTime, arNeck, fcase)
+        if curve:
+            plotStack.addCurve(curve)
 
     threads = list()
     for fcase in arCases:
