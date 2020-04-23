@@ -1,12 +1,13 @@
 import sys
-sys.path.append('/usr/lib/paraview')
-sys.path.append('/usr/lib/paraview/site-packages')
+import os
+import csv
+
+from settings import paraviewLib
+sys.path.append(paraviewLib)
+sys.path.append(os.path.join(paraviewLib, 'site-packages'))
 
 from paraview.simple import *
 import paraview.vtk as vtk
-
-import os
-import csv
 
 # Measure certain value along the line
 def measure_over_line(pline, scalar, threshold, length):
