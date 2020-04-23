@@ -77,14 +77,14 @@ if args.plot:
 if args.save:
 
     try:
-        os.makedirs(outputPath)
+        os.makedirs(args.save)
     except OSError as e:
         if e.errno != errno.EEXIST:
             raise
 
     for curve in arCurves:
         fileName = curve['label'] + '.csv'
-        fullPath = os.path.join(outputPath, fileName)
+        fullPath = os.path.join(args.save, fileName)
         np.savetxt(fullPath, np.column_stack((curve['t'], curve['neck'])), delimiter=',', comments='', header="t,neck")
 
     print("The CSV files have been saved")
