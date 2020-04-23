@@ -13,6 +13,7 @@ parser.add_argument("-t", "--time", type=float, help="Time scale")
 parser.add_argument("-f", "--folder", type=str, help="A folder  results to")
 parser.add_argument("-s", "--save", type=str, help="A folder to save results to")
 parser.add_argument("-l", "--load", type=str, help="A folder to load previously saved csv from")
+parser.add_argument("-c", "--cases", type=str, nargs='+', help="List of cases to handle")
 
 args = parser.parse_args()
 
@@ -48,6 +49,10 @@ else:
     else:
         pathToLoad = resultsPath
         casesToLoad = arCases
+
+    # cases
+    if args.cases:
+        casesToLoad = args.cases
 
     # time scale
     if args.time:
