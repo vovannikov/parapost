@@ -174,6 +174,36 @@ def neck_from_pf(fname, diameter, width):
             
     return timeList, neckGrowthList
 
+def shrinkage_from_pf(fname, diameter):
+
+    timeList = []
+    shrinkageList = []
+
+    with open(fname, 'r') as theFile:
+        reader = csv.DictReader(theFile)
+        
+        L0 = diameter
+
+        for line in reader:
+
+            time = float(line['time'])
+            
+            if "centroids_distance" in line:
+                L = float(line['centroids_distance'])
+
+                if time < 1e-11:
+                    L = L0
+
+                dL = L0 - L
+                shrinkage = dL / L0
+            else:
+                shrinkage = 0
+            
+            timeList.append(time)
+            shrinkageList.append(shrinkage)
+            
+    return timeList, shrinkageList
+
 def detect_file(inputFolder, ext):
     fNames = [fn for fn in os.listdir(inputFolder) if fn.endswith(ext)]
     fCount = len(fNames)
