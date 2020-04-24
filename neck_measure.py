@@ -2,7 +2,7 @@ import os
 import threading
 from paraview_postprocessing import *
 
-def parse_case(resultsPath, fcase, timeScale, cValueThreshold, lineResolution, isNeckFromPF):
+def parse_case(resultsPath, fcase, timeScale, cValueThreshold, lineResolution, isNeckFromPF, isShrinkageFromPF):
 
     print("")
     print("Working on case " + fcase + " ...")
@@ -23,13 +23,20 @@ def parse_case(resultsPath, fcase, timeScale, cValueThreshold, lineResolution, i
 
         if not(isNeckFromPF):
             arTime, arNeck = neck_from_vtk(reader, particleDiameter, 'c', cValueThreshold, lineResolution)
-            _, arShrinkage = shrinkage_from_vtk(reader, particleDiameter, 'c', cValueThreshold, lineResolution)
         else:
             csvFileName = detect_file(inputFolder, ".csv")
 
             if csvFileName:
                 arTime, arNeck = neck_from_pf(csvFileName, particleDiameter, gbWidth)
                 arShrinkage = [0] * len(arNeck)
+
+        if not(isShrinkageFromPF):
+            _, arShrinkage = shrinkage_from_vtk(reader, particleDiameter, 'c', cValueThreshold, lineResolution)
+        else:
+            csvFileName = detect_file(inputFolder, ".csv")
+
+            if csvFileName:
+                _, arShrinkage = shrinkage_from_pf(csvFileName, particleDiameter)
 
         arTime = [t*timeScale for t in arTime]
 
@@ -41,19 +48,19 @@ def parse_case(resultsPath, fcase, timeScale, cValueThreshold, lineResolution, i
 
         return None
 
-def neck_measure_serial(resultsPath, arCases, timeScale, cValueThreshold, lineResolution, isNeckFromPF):
+def neck_measure_serial(resultsPath, arCases, timeScale, cValueThreshold, lineResolution, isNeckFromPF, isShrinkageFromPF):
 
     arCurves = []
 
     for fcase in arCases:
 
-        curve = parse_case(resultsPath, fcase, timeScale, cValueThreshold, lineResolution, isNeckFromPF)
+        curve = parse_case(resultsPath, fcase, timeScale, cValueThreshold, lineResolution, isNeckFromPF, isShrinkageFromPF)
         if curve:
             arCurves.append(curve)
 
     return arCurves
 
-def neck_measure_parallel(resultsPath, arCases, timeScale, cValueThreshold, lineResolution, isNeckFromPF):
+def neck_measure_parallel(resultsPath, arCases, timeScale, cValueThreshold, lineResolution, isNeckFromPF, isShrinkageFromPF):
 
     arCurves = []
 
@@ -68,7 +75,7 @@ def neck_measure_parallel(resultsPath, arCases, timeScale, cValueThreshold, line
     plotStack = PlotStack()
 
     def thread_parse(fcase):
-        curve = parse_case(resultsPath, fcase, timeScale, cValueThreshold, lineResolution, isNeckFromPF)
+        curve = parse_case(resultsPath, fcase, timeScale, cValueThreshold, lineResolution, isNeckFromPF, isShrinkageFromPF)
 
         if curve:
             plotStack.addCurve(curve)

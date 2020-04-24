@@ -62,9 +62,9 @@ else:
 
     # sequential or parallel
     if args.thread:
-        arCurves = neck_measure_parallel(pathToLoad, casesToLoad, tscale, cValueThreshold, lineResolution, isNeckFromPF)
+        arCurves = neck_measure_parallel(pathToLoad, casesToLoad, tscale, cValueThreshold, lineResolution, isNeckFromPF, isShrinkageFromPF)
     else:
-        arCurves = neck_measure_serial(pathToLoad, casesToLoad, tscale, cValueThreshold, lineResolution, isNeckFromPF)
+        arCurves = neck_measure_serial(pathToLoad, casesToLoad, tscale, cValueThreshold, lineResolution, isNeckFromPF, isShrinkageFromPF)
 
 # Plot
 if args.plot:
