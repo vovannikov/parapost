@@ -24,7 +24,7 @@ def parse_case(resultsPath, fcase, timeScale, cValueThreshold, lineResolution, i
         if not(isNeckFromPF):
             arTime, arNeck = neck_from_vtk(reader, particleDiameter, 'c', cValueThreshold, lineResolution)
         else:
-            csvFileName = detect_file(inputFolder, ".csv")
+            csvFileName = detect_file(inputFolder, "_out.csv")
 
             if csvFileName:
                 arTime, arNeck = neck_from_pf(csvFileName, particleDiameter, gbWidth)
@@ -33,7 +33,7 @@ def parse_case(resultsPath, fcase, timeScale, cValueThreshold, lineResolution, i
         if not(isShrinkageFromPF):
             _, arShrinkage = shrinkage_from_vtk(reader, particleDiameter, 'c', cValueThreshold, lineResolution)
         else:
-            csvFileName = detect_file(inputFolder, ".csv")
+            csvFileName = detect_file(inputFolder, "_out.csv")
 
             if csvFileName:
                 _, arShrinkage = shrinkage_from_pf(csvFileName, particleDiameter)
