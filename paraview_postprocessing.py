@@ -77,6 +77,26 @@ def domain_dimensions(reader, scalar, threshold, resolution):
 
     return particleDiameter, gbWidth
 
+def diameter_from_pf(fname):
+
+    with open(fname, 'r') as theFile:
+        reader = csv.DictReader(theFile)
+
+        for line in reader:
+
+            time = float(line['time'])
+            
+            if "centroids_distance" in line:
+                if time > 1e-11:
+                    diameter = float(line['centroids_distance'])
+                    break
+
+            else:
+                diameter = 0
+                break
+            
+    return diameter
+
 def neck_from_vtk(reader, particleDiameter, scalar, threshold, resolution):
 
     tsteps = reader.TimestepValues

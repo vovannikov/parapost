@@ -19,13 +19,23 @@ def parse_case(resultsPath, fcase, timeScale, cValueThreshold, lineResolution, i
     if exodusFileName:
 
         reader = open_exodus(exodusFileName)
-        particleDiameter, gbWidth = domain_dimensions(reader, 'c', cValueThreshold, lineResolution)
+
+        csvFileName = detect_file(inputFolder, "_out.csv")
+        if csvFileName:
+            particleDiameter = diameter_from_pf(csvFileName)
+        else:
+            particleDiameter = 0
+
+        if isNeckFromPF or particleDiameter == 0:
+            particleDiameterPF, gbWidth = domain_dimensions(reader, 'c', cValueThreshold, lineResolution)
+            if particleDiameter == 0:
+                particleDiameter == particleDiameterPF
+
+        print("Final particle diameter = {}".format(particleDiameter))
 
         if not(isNeckFromPF):
             arTime, arNeck = neck_from_vtk(reader, particleDiameter, 'c', cValueThreshold, lineResolution)
         else:
-            csvFileName = detect_file(inputFolder, "_out.csv")
-
             if csvFileName:
                 arTime, arNeck = neck_from_pf(csvFileName, particleDiameter, gbWidth)
                 arShrinkage = [0] * len(arNeck)
@@ -33,8 +43,6 @@ def parse_case(resultsPath, fcase, timeScale, cValueThreshold, lineResolution, i
         if not(isShrinkageFromPF):
             _, arShrinkage = shrinkage_from_vtk(reader, particleDiameter, 'c', cValueThreshold, lineResolution)
         else:
-            csvFileName = detect_file(inputFolder, "_out.csv")
-
             if csvFileName:
                 _, arShrinkage = shrinkage_from_pf(csvFileName, particleDiameter)
 
