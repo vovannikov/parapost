@@ -29,7 +29,7 @@ def parse_case(resultsPath, fcase, timeScale, cValueThreshold, lineResolution, i
         if isNeckFromPF or particleDiameter == 0:
             particleDiameterPF, gbWidth = domain_dimensions(reader, 'c', cValueThreshold, lineResolution)
             if particleDiameter == 0:
-                particleDiameter == particleDiameterPF
+                particleDiameter = particleDiameterPF
 
         print("Final particle diameter = {}".format(particleDiameter))
 
