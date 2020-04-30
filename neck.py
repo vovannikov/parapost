@@ -110,6 +110,6 @@ if args.save:
     for curve in arCurves:
         fileName = curve['label'] + '.csv'
         fullPath = os.path.join(args.save, fileName)
-        np.savetxt(fullPath, np.column_stack((curve['t'], curve['neck'], curve['shrinkage'], curve['temp'])), delimiter=',', comments='', header="t,neck,shrinkage")
+        np.savetxt(fullPath, np.column_stack((curve['t'], curve['neck'], curve['shrinkage'], curve['temp'])), delimiter=',', comments='', header="t,neck,shrinkage,temp")
 
     print("The CSV files have been saved")
