@@ -25,15 +25,19 @@ if args.load:
     if not(os.path.isdir(args.load)):
         exit("ERROR: the csv data folder " + args.load + " does not exist")
 
-    onlyfiles = [f for f in os.listdir(args.load) if os.path.isfile(os.path.join(args.load, f))]
+    casesToLoad = [f for f in os.listdir(args.load) if os.path.isfile(os.path.join(args.load, f))]
+
+    # cases
+    if args.cases:
+        casesToLoad = [case + '.csv' for case in args.cases]
 
     arCurves = []
-    for fileName in onlyfiles:
+    for fileName in casesToLoad:
         fullPath = os.path.join(args.load, fileName)
         data = np.genfromtxt(fullPath, dtype=float, delimiter=',', names=True)
 
         label = os.path.splitext(fileName)[0]
-        curve = { 't': data["t"], 'neck': data["neck"], 'shrinkage': data["shrinkage"], 'label': label }
+        curve = { 't': data["t"], 'neck': data["neck"], 'shrinkage': data["shrinkage"], 'temp': data["temp"], 'label': label }
         arCurves.append(curve)
 
 else:
@@ -70,12 +74,13 @@ else:
 if args.plot:
     import matplotlib.pyplot as plt
 
-    fig, axes = plt.subplots(nrows=1, ncols=2)
+    fig, axes = plt.subplots(nrows=2, ncols=2)
     fig.suptitle('Neck growth and shrinkage')
 
     for curve in arCurves:
         axes[0].plot(curve['t'], curve['neck'], marker='', linestyle='-', label=curve['label'])
         axes[1].plot(curve['t'], curve['shrinkage'], marker='', linestyle='-', label=curve['label'])
+        axes[2].plot(curve['t'], curve['temp'], marker='', linestyle='-', label=curve['label'])
 
     axes[0].set_xlabel('time')
     axes[0].set_ylabel('x / r')
@@ -84,6 +89,10 @@ if args.plot:
     axes[1].set_xlabel('time')
     axes[1].set_ylabel('dL / L0')
     axes[1].grid(True)
+
+    axes[2].set_xlabel('time')
+    axes[2].set_ylabel('K')
+    axes[2].grid(True)
 
     handles, labels = axes[0].get_legend_handles_labels()
     fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, -0.02))

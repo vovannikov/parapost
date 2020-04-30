@@ -46,9 +46,11 @@ def parse_case(resultsPath, fcase, timeScale, cValueThreshold, lineResolution, i
             if csvFileName:
                 _, arShrinkage = shrinkage_from_pf(csvFileName, particleDiameter)
 
+        _, arTemp = field_from_pf(csvFileName, 'temperature')
+
         arTime = [t*timeScale for t in arTime]
 
-        curve = { 't': arTime, 'neck': arNeck, 'shrinkage': arShrinkage, 'label': fcase }
+        curve = { 't': arTime, 'neck': arNeck, 'shrinkage': arShrinkage, 'temp': arTemp, 'label': fcase }
 
         return curve
     

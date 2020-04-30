@@ -97,6 +97,27 @@ def diameter_from_pf(fname):
             
     return diameter
 
+def field_from_pf(fname, field):
+
+    timeList = []
+    fieldList = []
+
+    with open(fname, 'r') as theFile:
+        reader = csv.DictReader(theFile)
+        
+        for line in reader:
+
+            time = float(line['time'])
+            if field in line:
+                value = float(line[field])
+            else:
+                value = 0
+            
+            timeList.append(time)
+            fieldList.append(value)
+            
+    return timeList, fieldList
+
 def neck_from_vtk(reader, particleDiameter, scalar, threshold, resolution):
 
     tsteps = reader.TimestepValues
@@ -177,21 +198,9 @@ def shrinkage_from_vtk(reader, particleDiameter, scalar, threshold, resolution):
 
 def neck_from_pf(fname, diameter, width):
 
-    timeList = []
-    neckGrowthList = []
+    timeList, neckAreaList = field_from_pf(fname, 'neck')
+    neckGrowthList = [neckArea / width / diameter for neckArea in neckAreaList]
 
-    with open(fname, 'r') as theFile:
-        reader = csv.DictReader(theFile)
-        
-        for line in reader:        
-            time = float(line['time'])
-            neckArea = float(line['neck'])
-            neckDiameter = neckArea / width
-            neckGrowth = neckDiameter / diameter
-            
-            timeList.append(time)
-            neckGrowthList.append(neckGrowth)
-            
     return timeList, neckGrowthList
 
 def shrinkage_from_pf(fname, diameter):
