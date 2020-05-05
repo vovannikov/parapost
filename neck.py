@@ -26,6 +26,7 @@ if args.load:
         exit("ERROR: the csv data folder " + args.load + " does not exist")
 
     casesToLoad = [f for f in os.listdir(args.load) if os.path.isfile(os.path.join(args.load, f))]
+    casesToLoad.sort()
 
     # cases
     if args.cases:
@@ -78,23 +79,23 @@ if args.plot:
     fig.suptitle('Neck growth and shrinkage')
 
     for curve in arCurves:
-        axes[0].plot(curve['t'], curve['neck'], marker='', linestyle='-', label=curve['label'])
-        axes[1].plot(curve['t'], curve['shrinkage'], marker='', linestyle='-', label=curve['label'])
-        axes[2].plot(curve['t'], curve['temp'], marker='', linestyle='-', label=curve['label'])
+        axes[0][0].plot(curve['t'], curve['neck'], marker='', linestyle='-', label=curve['label'])
+        axes[0][1].plot(curve['t'], curve['shrinkage'], marker='', linestyle='-', label=curve['label'])
+        axes[1][0].plot(curve['t'], curve['temp'], marker='', linestyle='-', label=curve['label'])
 
-    axes[0].set_xlabel('time')
-    axes[0].set_ylabel('x / r')
-    axes[0].grid(True)
+    axes[0][0].set_xlabel('time')
+    axes[0][0].set_ylabel('x / r')
+    axes[0][0].grid(True)
 
-    axes[1].set_xlabel('time')
-    axes[1].set_ylabel('dL / L0')
-    axes[1].grid(True)
+    axes[0][1].set_xlabel('time')
+    axes[0][1].set_ylabel('dL / L0')
+    axes[0][1].grid(True)
 
-    axes[2].set_xlabel('time')
-    axes[2].set_ylabel('K')
-    axes[2].grid(True)
+    axes[1][0].set_xlabel('time')
+    axes[1][0].set_ylabel('K')
+    axes[1][0].grid(True)
 
-    handles, labels = axes[0].get_legend_handles_labels()
+    handles, labels = axes[0][0].get_legend_handles_labels()
     fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, -0.02))
 
     plt.show()
