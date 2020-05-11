@@ -1,4 +1,4 @@
-isNeckFromPF = False
+isNeckFromPF = True
 isShrinkageFromPF = True
 cValueThreshold = 0.52
 lineResolution = 1000

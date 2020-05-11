@@ -196,10 +196,17 @@ def shrinkage_from_vtk(reader, particleDiameter, scalar, threshold, resolution):
 
     return tsteps, arShrinkage
 
-def neck_from_pf(fname, diameter, width):
+def neck_from_pf_area(fname, diameter, width):
 
     timeList, neckAreaList = field_from_pf(fname, 'neck')
     neckGrowthList = [neckArea / width / diameter for neckArea in neckAreaList]
+
+    return timeList, neckGrowthList
+
+def neck_from_pf(fname, diameter):
+
+    timeList, neckWidthList = field_from_pf(fname, 'neck_width')
+    neckGrowthList = [neckWidth / diameter for neckWidth in neckWidthList]
 
     return timeList, neckGrowthList
 
