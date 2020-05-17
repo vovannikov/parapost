@@ -212,6 +212,9 @@ def neck_from_pf(fname, diameter):
 
 def shrinkage_from_pf(fname, diameter):
 
+    #fieldName = "centroids_distance"
+    fieldName = "shrinkage"
+
     timeList = []
     shrinkageList = []
 
@@ -224,8 +227,8 @@ def shrinkage_from_pf(fname, diameter):
 
             time = float(line['time'])
             
-            if "centroids_distance" in line:
-                L = float(line['centroids_distance'])
+            if fieldName in line:
+                L = float(line[fieldName])
 
                 if time < 1e-11:
                     L = L0
