@@ -230,7 +230,7 @@ def shrinkage_from_pf(fname, diameter):
                 if L0 < 0 and L > 1.0:
                     L0 = L
 
-                if L0 > 0
+                if L0 > 0:
                     dL = L0 - L
                     shrinkage = dL / L0
                 else:
