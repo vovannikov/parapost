@@ -212,8 +212,38 @@ def neck_from_pf(fname, diameter):
 
 def shrinkage_from_pf(fname, diameter):
 
-    #fieldName = "centroids_distance"
-    fieldName = "shrinkage"
+    timeList = []
+    shrinkageList = []
+
+    with open(fname, 'r') as theFile:
+        reader = csv.DictReader(theFile)
+        
+        L0 = -1
+
+        for line in reader:
+
+            time = float(line['time'])
+            
+            if "shrinkage" in line:
+                L = float(line["shrinkage"])
+
+                if L0 < 0 and L > 1.0:
+                    L0 = L
+
+                if L0 > 0
+                    dL = L0 - L
+                    shrinkage = dL / L0
+                else:
+                    shrinkage = 0
+            else:
+                shrinkage = 0
+            
+            timeList.append(time)
+            shrinkageList.append(shrinkage)
+            
+    return timeList, shrinkageList
+
+def shrinkage_from_pf_OLD(fname, diameter):
 
     timeList = []
     shrinkageList = []
@@ -227,8 +257,8 @@ def shrinkage_from_pf(fname, diameter):
 
             time = float(line['time'])
             
-            if fieldName in line:
-                L = float(line[fieldName])
+            if "centroids_distance" in line:
+                L = float(line["centroids_distance"])
 
                 if time < 1e-11:
                     L = L0
