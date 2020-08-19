@@ -215,11 +215,11 @@ def shrinkage_from_pf(fname, diameter):
     timeList = []
     shrinkageList = []
 
+    # first defined L0
+    L0 = -1
+
     with open(fname, 'r') as theFile:
         reader = csv.DictReader(theFile)
-        
-        # first defined L0
-        L0 = -1
 
         for line in reader:            
             if "shrinkage" in line:
@@ -228,7 +228,8 @@ def shrinkage_from_pf(fname, diameter):
                 if (L0 < 0 and L > 1.0) or L0 < L:
                     L0 = L
 
-        theFile.seek(0)
+    with open(fname, 'r') as theFile:
+        reader = csv.DictReader(theFile)
 
         for line in reader:
 
