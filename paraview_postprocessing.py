@@ -228,7 +228,7 @@ def shrinkage_from_pf(fname, diameter):
                 if (L0 < 0 and L > 1.0) or L0 < L:
                     L0 = L
 
-        reader.seek(0)
+        theFile.seek(0)
 
         for line in reader:
 
