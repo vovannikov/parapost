@@ -218,7 +218,17 @@ def shrinkage_from_pf(fname, diameter):
     with open(fname, 'r') as theFile:
         reader = csv.DictReader(theFile)
         
+        # first defined L0
         L0 = -1
+
+        for line in reader:            
+            if "shrinkage" in line:
+                L = float(line["shrinkage"])
+
+                if (L0 < 0 and L > 1.0) or L0 < L:
+                    L0 = L
+
+        f.seek(0)
 
         for line in reader:
 
@@ -227,10 +237,7 @@ def shrinkage_from_pf(fname, diameter):
             if "shrinkage" in line:
                 L = float(line["shrinkage"])
 
-                if L0 < 0 and L > 1.0:
-                    L0 = L
-
-                if L0 > 0:
+                if L0 > 0 and L0 > L:
                     dL = L0 - L
                     shrinkage = dL / L0
                 else:
