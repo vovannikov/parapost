@@ -243,8 +243,6 @@ def shrinkage_from_pf(fname, diameter):
                     shrinkage = dL / L0
                 else:
                     shrinkage = 0
-
-                print("L0 = {}, L = {}, shr = {}".format(L0, L, shrinkage))
             else:
                 shrinkage = 0
             
