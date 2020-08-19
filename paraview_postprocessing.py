@@ -238,15 +238,21 @@ def shrinkage_from_pf(fname, diameter):
             if "shrinkage" in line:
                 L = float(line["shrinkage"])
 
-                if L0 > 0 and L0 > L:
+                if L > 0 and  L0 > 0 and L0 > L:
                     dL = L0 - L
                     shrinkage = dL / L0
                 else:
                     shrinkage = 0
+
+                print("L0 = {}, L = {}, shr = {}".format(L0, L, shrinkage))
             else:
                 shrinkage = 0
             
             timeList.append(time)
+
+            if len(shrinkageList) and shrinkageList[-1] > 0 and shrinkage == 0:
+                shrinkageList[-1] = 0
+
             shrinkageList.append(shrinkage)
             
     return timeList, shrinkageList
